@@ -16,7 +16,7 @@
 
         public Module? Module { get; set; }
 
-        public Category5S? Category { get; set; }
+        public Category5s? Category { get; set; }
 
         public ICollection<AuditAnswer> AuditAnswers { get; set; } = new List<AuditAnswer>();
     }
