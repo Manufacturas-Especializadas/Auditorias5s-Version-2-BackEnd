@@ -2,7 +2,7 @@
 using Infrastructure.Persistence;
 using MediatR;
 
-namespace Application.Audits.Queries.GetActiveModules
+namespace Application.Modules.Queries.GetActiveModules
 {
     public class GetActiveModulesQueryHandler : IRequestHandler<GetActiveModulesQuery, IEnumerable<ModuleDto>>
     {

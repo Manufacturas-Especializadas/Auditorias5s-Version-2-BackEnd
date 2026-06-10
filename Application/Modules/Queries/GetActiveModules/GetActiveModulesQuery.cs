@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Application.Audits.Queries.GetActiveModules
+namespace Application.Modules.Queries.GetActiveModules
 {
     public record GetActiveModulesQuery() : IRequest<IEnumerable<ModuleDto>>;
 
