@@ -1,7 +1,7 @@
-﻿using Application.Audits.Queries.GetActiveModules;
-using Application.Modules.Commands.CreateModule;
+﻿using Application.Modules.Commands.CreateModule;
 using Application.Modules.Commands.DeleteModule;
 using Application.Modules.Commands.UpdateModule;
+using Application.Modules.Queries.GetActiveModules;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
