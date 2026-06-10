@@ -1,5 +1,6 @@
 ﻿using Application.Audits.Queries.GetActiveModules;
 using Application.Modules.Commands.CreateModule;
+using Application.Modules.Commands.UpdateModule;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +23,13 @@ namespace API.Controllers
 
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateModuleCommand command)
+        {
+            var response = await _mediator.Send(command);
+            return response.Success ? Ok(response) : BadRequest(new { Error = response.ErrorMessage });
+        }
+
+        [HttpPut("update")]
+        public async Task<IActionResult> Update([FromBody] UpdateModuleCommand command)
         {
             var response = await _mediator.Send(command);
             return response.Success ? Ok(response) : BadRequest(new { Error = response.ErrorMessage });
