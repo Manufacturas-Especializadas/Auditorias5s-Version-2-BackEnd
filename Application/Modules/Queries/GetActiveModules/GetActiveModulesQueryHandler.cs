@@ -15,7 +15,7 @@ namespace Application.Modules.Queries.GetActiveModules
             return await _context.Modules
                 .Where(m => m.IsActive)
                 .OrderBy(m => m.Id)
-                .Select(m => new ModuleDto(m.Id, m.Name))
+                .Select(m => new ModuleDto(m.Id, m.Name, m.IsActive))
                 .ToListAsync(cancellationToken);
         }
     }
