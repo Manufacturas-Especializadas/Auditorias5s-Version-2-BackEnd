@@ -1,7 +1,9 @@
-﻿using Application.Areas.Queries.GetAreasByModule;
-using Application.Areas.Commands.CreateArea;
-using Microsoft.AspNetCore.Mvc;
+﻿using Application.Areas.Commands.CreateArea;
+using Application.Areas.Commands.DeleteArea;
+using Application.Areas.Commands.UpdateArea;
+using Application.Areas.Queries.GetAreasByModule;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
@@ -21,6 +23,13 @@ namespace API.Controllers
 
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateAreaCommand command)
+        {
+            var response = await _mediator.Send(command);
+            return response.Success ? Ok(response) : BadRequest(new { Error = response.ErrorMessage });
+        }
+
+        [HttpPut("update")]
+        public async Task<IActionResult> Update([FromBody] UpdateAreaCommand command)
         {
             var response = await _mediator.Send(command);
             return response.Success ? Ok(response) : BadRequest(new { Error = response.ErrorMessage });
