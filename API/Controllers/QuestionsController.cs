@@ -1,4 +1,5 @@
 ﻿using Application.Questions.Commands.CreateQuestion;
+using Application.Questions.Commands.DeleteQuestion;
 using Application.Questions.Commands.UpdateQuestion;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -38,6 +39,14 @@ namespace API.Controllers
             var response = await _mediator.Send(command);
 
             return response.Success ? Ok(response) : BadRequest(new { Error = response.ErrorMessage });
+        }
+
+        [HttpDelete("delete/{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var response = await _mediator.Send(new DeleteQuestionCommand(id));
+
+            return response.Success ? Ok(new { Message = "Pregunta desactivada con éxito." }) : BadRequest(new { Error = response.ErrorMessage });
         }
     }
 }
