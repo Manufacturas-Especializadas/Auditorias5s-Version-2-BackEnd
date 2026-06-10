@@ -35,7 +35,7 @@ namespace API.Controllers
             return response.Success ? Ok(response) : BadRequest(new { Error = response.ErrorMessage });
         }
 
-        [HttpDelete("delete/({id:int}")]
+        [HttpDelete("delete/{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var response = await _mediator.Send(new DeleteAreaCommand(id));
