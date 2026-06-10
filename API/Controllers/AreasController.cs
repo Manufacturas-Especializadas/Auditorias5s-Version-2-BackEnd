@@ -1,4 +1,5 @@
-﻿using Application.Areas.Commands.CreateArea;
+﻿using Application.Areas.Queries.GetAreasByModule;
+using Application.Areas.Commands.CreateArea;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
 
@@ -10,6 +11,13 @@ namespace API.Controllers
     {
         private readonly IMediator _mediator;
         public AreasController(IMediator mediator) => _mediator = mediator;
+
+        [HttpGet("areas/{id:int}")]
+        public async Task<IActionResult> GetByModule(int id)
+        {
+            var response = await _mediator.Send(new GetAreasByModuleQuery(id));
+            return Ok(response);
+        }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateAreaCommand command)
