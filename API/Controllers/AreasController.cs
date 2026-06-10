@@ -19,7 +19,7 @@ namespace API.Controllers
             return Ok(response);
         }
 
-        [HttpPost]
+        [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateAreaCommand command)
         {
             var response = await _mediator.Send(command);
