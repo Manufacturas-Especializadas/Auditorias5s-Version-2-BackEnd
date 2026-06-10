@@ -18,6 +18,17 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+var allowedConnection = builder.Configuration.GetValue<string>("OrigenesPermitidos")!.Split(',');
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins", policy =>
+    {
+        policy.WithOrigins(allowedConnection)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 app.UseSwagger();
@@ -25,6 +36,8 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v2/swagger.json", "Auditorias 5s MESA API v2");
 });
+
+app.UseCors("AllowSpecificOrigins");
 
 app.UseCors("AllowSpecificOrigins");
 
