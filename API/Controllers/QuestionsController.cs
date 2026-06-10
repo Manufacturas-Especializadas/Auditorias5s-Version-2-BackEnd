@@ -1,5 +1,6 @@
 ﻿using Application.Questions.Commands.CreateQuestion;
 using Application.Questions.Commands.DeleteQuestion;
+using Application.Questions.Commands.GetQuestionsByModule;
 using Application.Questions.Commands.UpdateQuestion;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,14 @@ namespace API.Controllers
         public QuestionsController(IMediator mediator)
         {
             _mediator = mediator;
+        }
+
+        [HttpGet("module/{moduleId:int}")]
+        public async Task<IActionResult> GetByModule(int moduleId)
+        {
+            var response = await _mediator.Send(new GetQuestionsByModuleQuery(moduleId));
+
+            return Ok(response);
         }
 
         [HttpPost("create")]
