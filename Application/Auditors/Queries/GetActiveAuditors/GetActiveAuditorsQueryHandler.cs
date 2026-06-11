@@ -15,7 +15,7 @@ namespace Application.Auditors.Queries.GetActiveAuditors
             return await _context.Auditors
                 .Where(a => a.IsActive)
                 .OrderBy(a => a.FullName)
-                .Select(a => new AuditorDto(a.Id, a.FullName))
+                .Select(a => new AuditorDto(a.Id, a.FullName, a.IsActive))
                 .ToListAsync(cancellationToken);
         }
     }
