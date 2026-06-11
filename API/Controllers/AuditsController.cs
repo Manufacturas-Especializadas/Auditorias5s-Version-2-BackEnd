@@ -1,5 +1,6 @@
 ﻿using Application.Auditors.Commands.UpdateAuditor;
 using Application.Audits.Commands;
+using Application.Audits.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +15,13 @@ namespace API.Controllers
         public AuditsController(IMediator mediator)
         {
             _mediator = mediator;
+        }
+
+        [HttpGet("history")]
+        public async Task<IActionResult> GetHistory()
+        {
+            var response = await _mediator.Send(new GetAuditsHistoryQuery());
+            return Ok(response);
         }
 
         [HttpPost("create")]
