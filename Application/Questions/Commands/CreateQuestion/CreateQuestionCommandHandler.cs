@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Infrastructure.Persistence;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Questions.Commands.CreateQuestion
 {
@@ -17,27 +18,34 @@ namespace Application.Questions.Commands.CreateQuestion
         {
             if (string.IsNullOrWhiteSpace(request.QuestionText))
             {
-                return new QuestionResponse(0, string.Empty, false, "El texto de la pregunta no puede estar vacio");
+                return new QuestionResponse(0, string.Empty, false, "El texto de la pregunta no puede estar vacío.");
             }
 
             if (request.ModuleId <= 0 || request.CategoryId <= 0)
             {
-                return new QuestionResponse(0, string.Empty, false, "El modulo y la categoría son obligatorios");
+                return new QuestionResponse(0, string.Empty, false, "El módulo y la categoría son obligatorios.");
             }
 
-            var newQuestions = new Question
+            int maxOrder = await _context.Questions
+                .Where(q => q.ModuleId == request.ModuleId && q.CategoryId == request.CategoryId)
+                .Select(q => (int?)q.DisplayOrder) 
+                .MaxAsync(cancellationToken) ?? 0;
+
+            int nextDisplayOrder = maxOrder + 1;
+
+            var newQuestion = new Question
             {
                 ModuleId = request.ModuleId,
                 CategoryId = request.CategoryId,
                 QuestionText = request.QuestionText.Trim(),
-                DisplayOrder = request.DisplayOrder,
+                DisplayOrder = nextDisplayOrder,
                 IsActive = true
             };
 
-            _context.Questions.Add(newQuestions);
-            await _context.SaveChangesAsync();
+            _context.Questions.Add(newQuestion);
+            await _context.SaveChangesAsync(cancellationToken);
 
-            return new QuestionResponse(newQuestions.Id, newQuestions.QuestionText, true);
+            return new QuestionResponse(newQuestion.Id, newQuestion.QuestionText, true);
         }
     }
 }
