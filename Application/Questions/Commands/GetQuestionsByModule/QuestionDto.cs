@@ -2,6 +2,8 @@
 {
     public record QuestionDto(
         int Id,
-        string Text
+        string Text,
+        int DisplayOrder,
+        bool IsActive
     );
 }

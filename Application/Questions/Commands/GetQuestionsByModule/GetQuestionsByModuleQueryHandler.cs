@@ -32,7 +32,12 @@ namespace Application.Questions.Commands.GetQuestionsByModule
                     return new ModuleQuestionsResponse(
                         Key: categoryName.ToLower().Replace(" ", ""),
                         Title: $"Auditoría - {categoryName} ({japanese})",
-                        Questions: group.Select(q => new QuestionDto(q.Id, q.QuestionText))
+                        Questions: group.Select(q => new QuestionDto(
+                            q.Id,
+                            q.QuestionText,
+                            q.DisplayOrder,
+                            q.IsActive
+                        ))
                     );
                 });
 
