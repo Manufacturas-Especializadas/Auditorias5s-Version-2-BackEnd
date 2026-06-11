@@ -15,7 +15,7 @@ namespace Application.Areas.Queries.GetAreasByModule
             return await _context.Areas
                 .Where(a => a.ModuleId == request.ModuleId && a.IsActive)
                 .OrderBy(a => a.Name)
-                .Select(a => new AreaDto(a.Id, a.Name))
+                .Select(a => new AreaDto(a.Id, a.Name, a.IsActive, a.ModuleId))
                 .ToListAsync(cancellationToken);
         }
     }
