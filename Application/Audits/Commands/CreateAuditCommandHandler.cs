@@ -66,11 +66,15 @@ namespace Application.Audits.Commands
                 _ => "Crítico - No cumple con los estándares mínimos"
             };
 
+            TimeZoneInfo mexicoTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time (Mexico)");
+
+            DateTime nowInMexico = TimeZoneInfo.ConvertTime(DateTime.UtcNow, mexicoTimeZone);
+
             var audit = new Audit
             {
                 AreaId = request.AreaId,
                 AuditorId = request.AuditorId,
-                AuditDate = DateTime.UtcNow,
+                AuditDate = nowInMexico,
                 FinalScore = finalScore,
                 Verdict = verdict
             };
