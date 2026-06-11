@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using MesaCore.Audits.Application.Audits.Queries.GetAuditExcelReport;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Application
 {
@@ -7,7 +8,10 @@ namespace Application
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+            services.AddTransient<GetAuditExcelReportQueryHandler>();
+
             return services;
+
         }
 
     }
