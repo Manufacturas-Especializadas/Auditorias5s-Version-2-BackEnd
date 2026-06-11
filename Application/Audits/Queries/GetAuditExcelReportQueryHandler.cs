@@ -96,7 +96,7 @@ public class GetAuditExcelReportQueryHandler : IRequestHandler<GetAuditExcelRepo
         var scoreCell = worksheet.Cell("D5");
         scoreCell.Value = data.FinalScore / 100M;
 
-        scoreCell.Style.NumberFormat.Format = "0.0";
+        scoreCell.Style.NumberFormat.Format = "0.0%";
         scoreCell.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
         scoreCell.Style.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
 
