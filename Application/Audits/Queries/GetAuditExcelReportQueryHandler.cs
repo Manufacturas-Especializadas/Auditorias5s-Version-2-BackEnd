@@ -52,13 +52,23 @@ public class GetAuditExcelReportQueryHandler : IRequestHandler<GetAuditExcelRepo
             ? (decimal)data.Answers.Average(ans => ans.Score) * 20M
             : 0M;
 
+        var orden5S = new[]
+        {
+            "SELECCIONAR",
+            "ORDENAR",
+            "LIMPIEZA",
+            "ESTANDARIZAR",
+            "SOSTENER"
+        };
+
         var resumenPorS = data.Answers
             .GroupBy(ans => ans.CategoryTitle)
-            .Select(g => new {
+            .Select(g => new
+            {
                 Categoria = g.Key,
                 Promedio100 = (decimal)g.Average(ans => ans.Score) * 20M
             })
-            .OrderBy(g => g.Categoria)
+            .OrderBy(x => Array.IndexOf(orden5S, x.Categoria))
             .ToList();
 
         var cardBackground = promedioGeneral100 >= 95M ? XLColor.FromHtml("#DCFCE7")
@@ -70,6 +80,116 @@ public class GetAuditExcelReportQueryHandler : IRequestHandler<GetAuditExcelRepo
                           : promedioGeneral100 >= 85M ? XLColor.FromHtml("#075985")
                           : promedioGeneral100 >= 70M ? XLColor.FromHtml("#92400E")
                           : XLColor.FromHtml("#991B1B");
+
+        decimal seleccionar = resumenPorS
+            .FirstOrDefault(x => x.Categoria.ToUpper() == "SELECCIONAR")
+            ?.Promedio100 ?? 0;
+                decimal ordenar = resumenPorS
+                    .FirstOrDefault(x => x.Categoria.ToUpper() == "ORDENAR")
+                    ?.Promedio100 ?? 0;
+
+                decimal limpieza = resumenPorS
+                    .FirstOrDefault(x => x.Categoria.ToUpper() == "LIMPIEZA")
+                    ?.Promedio100 ?? 0;
+
+                decimal estandarizar = resumenPorS
+                    .FirstOrDefault(x => x.Categoria.ToUpper() == "ESTANDARIZAR")
+                    ?.Promedio100 ?? 0;
+
+                decimal sostener = resumenPorS
+                    .FirstOrDefault(x => x.Categoria.ToUpper() == "SOSTENER")
+                    ?.Promedio100 ?? 0;
+
+        var wsEjemplo = workbook.Worksheets.Add("CALIFICACIONES INDIVIDUALES");
+
+        wsEjemplo.Cell("A2").Value = "Auditor:";
+        wsEjemplo.Cell("B2").Value = "Área / Línea:";
+        wsEjemplo.Cell("C2").Value = "Módulo:";
+        wsEjemplo.Cell("D2").Value = "SELECCIONAR";
+        wsEjemplo.Cell("E2").Value = "ORDENAR";
+        wsEjemplo.Cell("F2").Value = "LIMPIEZA";
+        wsEjemplo.Cell("G2").Value = "ESTANDARIZAR";
+        wsEjemplo.Cell("H2").Value = "SOSTENER";
+        wsEjemplo.Cell("I2").Value = "PUNTAJE FINAL";
+
+        var topHeader = wsEjemplo.Range("A2:I2");
+
+        topHeader.Style.Font.Bold = true;
+        topHeader.Style.Fill.BackgroundColor = XLColor.LightGray;
+        topHeader.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+        wsEjemplo.Cell("A3").Value = data.AuditorName;
+        wsEjemplo.Cell("B3").Value = data.AreaName;
+        wsEjemplo.Cell("C3").Value = data.ModuleName;
+
+        wsEjemplo.Cell("D3").Value = seleccionar;
+        wsEjemplo.Cell("E3").Value = ordenar;
+        wsEjemplo.Cell("F3").Value = limpieza;
+        wsEjemplo.Cell("G3").Value = estandarizar;
+        wsEjemplo.Cell("H3").Value = sostener;
+        wsEjemplo.Cell("I3").Value = promedioGeneral100;
+
+        wsEjemplo.Range("D3:I3").Style.NumberFormat.Format = "0.00";
+
+        int ejemploStartRow = 8;
+
+        wsEjemplo.Cell(ejemploStartRow, 1).Value = "Categoría 5S";
+        wsEjemplo.Cell(ejemploStartRow, 2).Value = "ID";
+        wsEjemplo.Cell(ejemploStartRow, 3).Value = "Aspecto Evaluado";
+        wsEjemplo.Cell(ejemploStartRow, 4).Value = "Puntuación (1-5)";
+        wsEjemplo.Cell(ejemploStartRow, 5).Value = "Puntos (x20)";
+
+        var ejemploHeader =
+            wsEjemplo.Range(ejemploStartRow, 1, ejemploStartRow, 5);
+
+        ejemploHeader.Style.Font.Bold = true;
+        ejemploHeader.Style.Font.FontColor = XLColor.White;
+        ejemploHeader.Style.Fill.BackgroundColor =
+            XLColor.FromHtml("#1E293B");
+
+        int ejemploRow = ejemploStartRow + 1;
+
+        foreach (var ans in data.Answers)
+        {
+            wsEjemplo.Cell(ejemploRow, 1).Value = ans.CategoryTitle;
+            wsEjemplo.Cell(ejemploRow, 2).Value = ans.QuestionId;
+            wsEjemplo.Cell(ejemploRow, 3).Value = ans.QuestionText;
+            wsEjemplo.Cell(ejemploRow, 4).Value = ans.Score;
+            wsEjemplo.Cell(ejemploRow, 5).Value = ans.Score * 20;
+
+            if (ejemploRow % 2 == 0)
+            {
+                wsEjemplo.Range(ejemploRow, 1, ejemploRow, 5)
+                    .Style.Fill.BackgroundColor =
+                    XLColor.FromHtml("#F8FAFC");
+            }
+
+            ejemploRow++;
+        }
+
+        wsEjemplo.Column(1).Width = 18;
+        wsEjemplo.Column(2).Width = 10;
+        wsEjemplo.Column(3).Width = 80;
+        wsEjemplo.Column(4).Width = 18;
+        wsEjemplo.Column(5).Width = 15;
+
+        wsEjemplo.Column(3)
+            .Style.Alignment.SetWrapText(true);
+
+        wsEjemplo.Range(
+            ejemploStartRow,
+            1,
+            ejemploRow - 1,
+            5
+        ).Style.Border.OutsideBorder =
+            XLBorderStyleValues.Thin;
+
+        wsEjemplo.Range(
+            ejemploStartRow,
+            1,
+            ejemploRow - 1,
+            5
+        ).SetAutoFilter();
 
         var wsDetalle = workbook.Worksheets.Add("Auditorias Detalladas");
 
@@ -212,6 +332,9 @@ public class GetAuditExcelReportQueryHandler : IRequestHandler<GetAuditExcelRepo
         wsResumen.Column(2).Width = 26;
 
         using var stream = new MemoryStream();
+        workbook.Worksheet("CALIFICACIONES INDIVIDUALES").Position = 1;
+        workbook.Worksheet("Auditorias Detalladas").Position = 2;
+        workbook.Worksheet("Resumen").Position = 3;
         workbook.SaveAs(stream);
         return stream.ToArray();
     }
