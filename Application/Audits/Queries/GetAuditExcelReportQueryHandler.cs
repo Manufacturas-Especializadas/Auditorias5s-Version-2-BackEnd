@@ -47,11 +47,34 @@ public class GetAuditExcelReportQueryHandler : IRequestHandler<GetAuditExcelRepo
     public byte[] GenerateExcelByteArray(AuditExcelReportDto data)
     {
         using var workbook = new XLWorkbook();
-        var worksheet = workbook.Worksheets.Add("Reporte 5S");
 
-        var titleRange = worksheet.Range("A2:D2");
+        decimal promedioGeneral = data.Answers.Count > 0
+            ? (decimal)data.Answers.Average(ans => ans.Score)
+            : 0M;
+
+        var resumenPorS = data.Answers
+            .GroupBy(ans => ans.CategoryTitle)
+            .Select(g => new {
+                Categoria = g.Key,
+                Promedio = (decimal)g.Average(ans => ans.Score)
+            })
+            .OrderBy(g => g.Categoria)
+            .ToList();
+
+        var cardBackground = promedioGeneral >= 4.5M ? XLColor.FromHtml("#DCFCE7")
+                           : promedioGeneral >= 4.0M ? XLColor.FromHtml("#E0F2FE")
+                           : promedioGeneral >= 3.0M ? XLColor.FromHtml("#FEF3C7")
+                           : XLColor.FromHtml("#FEE2E2");
+
+        var cardTextColor = promedioGeneral >= 4.5M ? XLColor.FromHtml("#166534")
+                          : promedioGeneral >= 4.0M ? XLColor.FromHtml("#075985")
+                          : promedioGeneral >= 3.0M ? XLColor.FromHtml("#92400E")
+                          : XLColor.FromHtml("#991B1B");
+
+        var wsDetalle = workbook.Worksheets.Add("Detalle de Auditoría");
+
+        var titleRange = wsDetalle.Range("A2:D2");
         titleRange.Merge().Value = "REPORTE DE AUDITORÍA DE CALIDAD 5S";
-
         titleRange.Style.Font.Bold = true;
         titleRange.Style.Font.FontSize = 16;
         titleRange.Style.Font.FontName = "Segoe UI";
@@ -59,100 +82,128 @@ public class GetAuditExcelReportQueryHandler : IRequestHandler<GetAuditExcelRepo
         titleRange.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#1E293B"));
         titleRange.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
         titleRange.Style.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
-        worksheet.Row(2).Height = 35;
+        wsDetalle.Row(2).Height = 35;
 
-        worksheet.Cell("A4").Value = "Módulo:";
-        worksheet.Cell("B4").Value = data.ModuleName;
-        worksheet.Cell("A5").Value = "Área / Línea:";
-        worksheet.Cell("B5").Value = data.AreaName;
+        wsDetalle.Cell("A4").Value = "Módulo:";
+        wsDetalle.Cell("B4").Value = data.ModuleName;
+        wsDetalle.Cell("A5").Value = "Área / Línea:";
+        wsDetalle.Cell("B5").Value = data.AreaName;
+        wsDetalle.Cell("A7").Value = "Auditor:";
+        wsDetalle.Cell("B7").Value = data.AuditorName;
+        wsDetalle.Cell("A8").Value = "Fecha Registro:";
+        wsDetalle.Cell("B8").Value = data.AuditDate.ToString("dd/MM/yyyy HH:mm:ss");
 
-        worksheet.Cell("A7").Value = "Auditor:";
-        worksheet.Cell("B7").Value = data.AuditorName;
-        worksheet.Cell("A8").Value = "Fecha Registro:";
-        worksheet.Cell("B8").Value = data.AuditDate.ToString("dd/MM/yyyy HH:mm:ss");
-
-        var labelRange = worksheet.Range("A4:A8");
+        var labelRange = wsDetalle.Range("A4:A8");
         labelRange.Style.Font.Bold = true;
         labelRange.Style.Font.FontColor = XLColor.FromHtml("#475569");
-        labelRange.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
 
-        var cardBackground = data.FinalScore >= 95M ? XLColor.FromHtml("#DCFCE7")
-                           : data.FinalScore >= 85M ? XLColor.FromHtml("#E0F2FE")
-                           : data.FinalScore >= 70M ? XLColor.FromHtml("#FEF3C7")
-                           : XLColor.FromHtml("#FEE2E2");
-
-        var cardTextColor = data.FinalScore >= 95M ? XLColor.FromHtml("#166534")
-                          : data.FinalScore >= 85M ? XLColor.FromHtml("#075985")
-                          : data.FinalScore >= 70M ? XLColor.FromHtml("#92400E")
-                          : XLColor.FromHtml("#991B1B");
-
-        var scoreLabel = worksheet.Cell("D4");
-        scoreLabel.Value = "CALIFICACIÓN FINAL";
+        var scoreLabel = wsDetalle.Cell("D4");
+        scoreLabel.Value = "PROMEDIO GENERAL";
         scoreLabel.Style.Font.Bold = true;
         scoreLabel.Style.Font.FontSize = 9;
         scoreLabel.Style.Font.FontColor = XLColor.FromHtml("#64748B");
         scoreLabel.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
-        var scoreCell = worksheet.Cell("D5");
-        scoreCell.Value = data.FinalScore / 100M;
-
-        scoreCell.Style.NumberFormat.Format = "0.0%";
+        var scoreCell = wsDetalle.Cell("D5");
+        scoreCell.Value = promedioGeneral;
+        scoreCell.Style.NumberFormat.Format = "0.0";
         scoreCell.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
         scoreCell.Style.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
-
         scoreCell.Style.Font.Bold = true;
         scoreCell.Style.Font.FontSize = 24;
         scoreCell.Style.Font.FontColor = cardTextColor;
 
-        worksheet.Range("D5:D7").Merge();
-        var cardRange = worksheet.Range("D4:D7");
+        wsDetalle.Range("D5:D7").Merge();
+        var cardRange = wsDetalle.Range("D4:D7");
         cardRange.Style.Fill.SetBackgroundColor(cardBackground);
         cardRange.Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin).Border.SetOutsideBorderColor(XLColor.FromHtml("#CBD5E1"));
 
         int startRow = 10;
+        wsDetalle.Cell(startRow, 1).Value = "Categoría 5S";
+        wsDetalle.Cell(startRow, 2).Value = "ID";
+        wsDetalle.Cell(startRow, 3).Value = "Aspecto Evaluado";
+        wsDetalle.Cell(startRow, 4).Value = "Calificación";
 
-        worksheet.Cell(startRow, 1).Value = "Categoría 5S";
-        worksheet.Cell(startRow, 2).Value = "ID Pregunta";
-        worksheet.Cell(startRow, 3).Value = "Aspecto Evaluado";
-        worksheet.Cell(startRow, 4).Value = "Calificación (1-5)";
-
-        var tableHeaderRange = worksheet.Range(startRow, 1, startRow, 4);
-        tableHeaderRange.Style.Font.Bold = true;
-        tableHeaderRange.Style.Font.FontColor = XLColor.White;
-        tableHeaderRange.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#334155"));
-        tableHeaderRange.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-        tableHeaderRange.Style.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
-        worksheet.Row(startRow).Height = 25;
+        var headerRange = wsDetalle.Range(startRow, 1, startRow, 4);
+        headerRange.Style.Font.Bold = true;
+        headerRange.Style.Font.FontColor = XLColor.White;
+        headerRange.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#334155"));
+        headerRange.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+        wsDetalle.Row(startRow).Height = 25;
 
         int currentRow = startRow + 1;
         foreach (var ans in data.Answers)
         {
-            worksheet.Cell(currentRow, 1).Value = ans.CategoryTitle;
-            worksheet.Cell(currentRow, 2).Value = ans.QuestionId;
-            worksheet.Cell(currentRow, 3).Value = ans.QuestionText;
-            worksheet.Cell(currentRow, 4).Value = ans.Score;
+            wsDetalle.Cell(currentRow, 1).Value = ans.CategoryTitle;
+            wsDetalle.Cell(currentRow, 2).Value = ans.QuestionId;
+            wsDetalle.Cell(currentRow, 3).Value = ans.QuestionText;
+            wsDetalle.Cell(currentRow, 4).Value = ans.Score;
 
-            worksheet.Cell(currentRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-            worksheet.Cell(currentRow, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-            worksheet.Cell(currentRow, 2).Style.Font.FontName = "Consolas";
-            worksheet.Cell(currentRow, 3).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
-            worksheet.Cell(currentRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-            worksheet.Cell(currentRow, 4).Style.Font.Bold = true;
+            wsDetalle.Cell(currentRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+            wsDetalle.Cell(currentRow, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.FontName = "Consolas";
+            wsDetalle.Cell(currentRow, 3).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
+            wsDetalle.Cell(currentRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.Bold = true;
 
             if (currentRow % 2 == 0)
             {
-                worksheet.Range(currentRow, 1, currentRow, 4).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F8FAFC"));
+                wsDetalle.Range(currentRow, 1, currentRow, 4).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F8FAFC"));
             }
-
-            worksheet.Range(currentRow, 1, currentRow, 4).Style.Border.SetBottomBorder(XLBorderStyleValues.Thin).Border.SetBottomBorderColor(XLColor.FromHtml("#F1F5F9"));
-
+            wsDetalle.Range(currentRow, 1, currentRow, 4).Style.Border.SetBottomBorder(XLBorderStyleValues.Thin).Border.SetBottomBorderColor(XLColor.FromHtml("#F1F5F9"));
             currentRow++;
         }
 
-        worksheet.Columns(1, 4).AdjustToContents();
+        wsDetalle.Columns(1, 4).AdjustToContents();
+        wsDetalle.Column(3).Width = 70;
+        wsDetalle.Column(3).Style.Alignment.SetWrapText(true);
 
-        worksheet.Column(3).Width = 70;
-        worksheet.Column(3).Style.Alignment.SetWrapText(true);
+        var wsResumen = workbook.Worksheets.Add("Resumen por S");
+
+        var summaryTitleRange = wsResumen.Range("A2:B2");
+        summaryTitleRange.Merge().Value = "PROMEDIOS CONSOLIDADOS POR CLASIFICACIÓN";
+        summaryTitleRange.Style.Font.Bold = true;
+        summaryTitleRange.Style.Font.FontSize = 12;
+        summaryTitleRange.Style.Font.FontName = "Segoe UI";
+        summaryTitleRange.Style.Font.FontColor = XLColor.White;
+        summaryTitleRange.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#475569"));
+        summaryTitleRange.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+        summaryTitleRange.Style.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
+        wsResumen.Row(2).Height = 28;
+
+        int summaryStartRow = 4;
+        wsResumen.Cell(summaryStartRow, 1).Value = "Clasificación 5S";
+        wsResumen.Cell(summaryStartRow, 2).Value = "Promedio Obtenido";
+
+        var summaryHeaderRange = wsResumen.Range(summaryStartRow, 1, summaryStartRow, 2);
+        summaryHeaderRange.Style.Font.Bold = true;
+        summaryHeaderRange.Style.Font.FontColor = XLColor.White;
+        summaryHeaderRange.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#1E293B"));
+        summaryHeaderRange.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+        wsResumen.Row(summaryStartRow).Height = 22;
+
+        int rRow = summaryStartRow + 1;
+        foreach (var item in resumenPorS)
+        {
+            wsResumen.Cell(rRow, 1).Value = item.Categoria;
+            wsResumen.Cell(rRow, 2).Value = item.Promedio;
+
+            wsResumen.Cell(rRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left).Font.Bold = true;
+            wsResumen.Cell(rRow, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.Bold = true;
+            wsResumen.Cell(rRow, 2).Style.NumberFormat.Format = "0.0";
+
+            var sTextColor = item.Promedio >= 4.5M ? XLColor.FromHtml("#166534")
+                           : item.Promedio >= 4.0M ? XLColor.FromHtml("#075985")
+                           : item.Promedio >= 3.0M ? XLColor.FromHtml("#92400E")
+                           : XLColor.FromHtml("#991B1B");
+
+            wsResumen.Cell(rRow, 2).Style.Font.FontColor = sTextColor;
+
+            wsResumen.Range(rRow, 1, rRow, 2).Style.Border.SetBottomBorder(XLBorderStyleValues.Thin).Border.SetBottomBorderColor(XLColor.FromHtml("#E2E8F0"));
+            rRow++;
+        }
+
+        wsResumen.Columns(1, 2).AdjustToContents();
+        wsResumen.Column(1).Width = 35;
+        wsResumen.Column(2).Width = 22;
 
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);
