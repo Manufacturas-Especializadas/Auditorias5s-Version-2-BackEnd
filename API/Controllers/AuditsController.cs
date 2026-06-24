@@ -27,7 +27,7 @@ namespace API.Controllers
             return Ok(response);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("getById/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var audit = await _mediator.Send(new GetAuditByIdQuery(id));
