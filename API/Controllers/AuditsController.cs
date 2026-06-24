@@ -66,12 +66,5 @@ namespace API.Controllers
 
             return Ok(response);
         }
-
-        [HttpPut("update")]
-        public async Task<IActionResult> Update([FromBody] UpdateAuditorCommand command)
-        {
-            var response = await _mediator.Send(command);
-            return response.Success ? Ok(response) : BadRequest(new { Error = response.ErrorMessage });
-        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Application.Auditors.Commands.CreateAuditor;
 using Application.Auditors.Commands.DeleteAuditor;
+using Application.Auditors.Commands.UpdateAuditor;
 using Application.Auditors.Queries.GetActiveAuditors;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +24,13 @@ namespace API.Controllers
 
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateAuditorCommand command)
+        {
+            var response = await _mediator.Send(command);
+            return response.Success ? Ok(response) : BadRequest(new { Error = response.ErrorMessage });
+        }
+
+        [HttpPut("update")]
+        public async Task<IActionResult> Update([FromBody] UpdateAuditorCommand command)
         {
             var response = await _mediator.Send(command);
             return response.Success ? Ok(response) : BadRequest(new { Error = response.ErrorMessage });
