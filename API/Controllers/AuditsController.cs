@@ -66,5 +66,23 @@ namespace API.Controllers
 
             return Ok(response);
         }
+
+        [HttpPut("update/{id}")]
+        public async Task<IActionResult> UpdateAudit([FromRoute] int id, [FromBody] UpdateAuditCommand commnad)
+        {
+            if (id != commnad.AuditId)
+            {
+                return BadRequest("El ID de la ruta no coincide con el ID proporcionado");
+            }
+
+            var success = await _mediator.Send(commnad);
+
+            if(!success)
+            {
+                return BadRequest("No se pudo actualizar la auditoría");
+            }
+
+            return Ok();
+        }
     }
 }
