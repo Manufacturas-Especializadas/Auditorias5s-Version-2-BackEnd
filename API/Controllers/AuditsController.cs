@@ -84,5 +84,15 @@ namespace API.Controllers
 
             return Ok();
         }
+
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteAudit(int id)
+        {
+            var success = await _mediator.Send(new DeleteAuditCommand(id));
+
+            if (!success) return NotFound("La auditoría no existe");
+
+            return Ok();
+        }
     }
 }
