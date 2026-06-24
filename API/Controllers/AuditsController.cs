@@ -27,6 +27,16 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var audit = await _mediator.Send(new GetAuditByIdQuery(id));
+
+            if (audit == null) return NotFound("La auditoría no existe.");
+
+            return Ok(audit);
+        }
+
         [HttpGet("download-excel/{id}")]
         public async Task<IActionResult> DownloadExcel([FromRoute] int id)
         {
